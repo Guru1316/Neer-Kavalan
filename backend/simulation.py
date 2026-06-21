@@ -4,6 +4,7 @@ import time
 import os
 from dotenv import load_dotenv
 from pymongo import MongoClient
+from zoneinfo import ZoneInfo
 
 # Load environment variables
 load_dotenv()
@@ -143,7 +144,7 @@ def generate_reading(village_name):
         "temperature": round(temperature, 1),
         "risk_score": risk_score,
         "status": status,
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now(ZoneInfo("Asia/Kolkata")).isoformat()
     }
 
 def classify_water(ph, tds, turbidity, temp, village_name):
@@ -194,7 +195,7 @@ def store_alert_in_mongodb(village_name, message, status):
         "village_name": village_name,
         "message": message,
         "status": status,
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": datetime.now(ZoneInfo("Asia/Kolkata")).isoformat(),
         "read": False
     }
     

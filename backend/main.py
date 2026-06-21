@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 from typing import List, Dict, Any, Optional
 import os
 from dotenv import load_dotenv
@@ -385,7 +386,7 @@ async def get_dashboard_summary():
             "warning_villages": 0,
             "dangerous_villages": 0,
             "active_alerts": 0,
-            "last_updated": datetime.now().isoformat()
+            "last_updated": datetime.now(ZoneInfo("Asia/Kolkata")).isoformat()
         }
 
 @app.get("/latest-readings")
