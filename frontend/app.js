@@ -1,5 +1,5 @@
 // API Configuration
-const API_URL = 'https://neer-kavalan.onrender.com/';
+const API_URL = 'https://neer-kavalan.onrender.com';
 
 // Chart instances
 let qualityChart = null;
