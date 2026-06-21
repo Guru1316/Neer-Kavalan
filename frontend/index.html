@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neer Kavalan - Smart Village Water Monitoring System</title>
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet.js -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Chart.js Plugins -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+
+    <link rel="icon" href="drop.png">
+
+</head>
+<body>
+    <div id="app">
+        <!-- Top Header Bar -->
+        <div class="top-header">
+            <div class="container-fluid">
+                <div class="row align-items-center">
+                    <div class="col-md-3">
+                        <div class="govt-brand">
+                            <!-- <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Government_of_Tamil_Nadu_Logo.svg/120px-Government_of_Tamil_Nadu_Logo.svg.png" alt="Government Logo" height="30" class="me-2"> -->
+                            <span>Govt. of Tamil Nadu</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6 text-center">
+                        <div class="dept-name">
+                            <i class="fas fa-tint"></i>
+                            Department of Water Resources
+                            <span class="badge bg-primary ms-2">Dharmapuri District</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-end">
+                        <div class="datetime-display">
+                            <i class="far fa-calendar-alt"></i>
+                            <span id="currentDateTime"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Header -->
+        <header class="header glass">
+            <div class="container-fluid">
+                <div class="row align-items-center">
+                    <div class="col-lg-5">
+                        <div class="logo-wrapper">
+                            <div class="logo-icon">
+                                <i class="fas fa-water"></i>
+                            </div>
+                            <div>
+                                <h1 class="logo">Neer Kavalan</h1>
+                                <p class="subtitle">Smart Village Water Contamination Detection System</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-7">
+                        <div class="header-stats">
+                            <!-- <div class="status-item">
+                                <span class="status-dot online"></span>
+                                <span class="status-label">System Online</span>
+                            </div> -->
+                            <div class="status-item">
+                                <i class="fas fa-map-marker-alt text-primary"></i>
+                                <span>Dharmapuri</span>
+                            </div>
+                            <div class="status-item">
+                                <i class="fas fa-clock text-info"></i>
+                                <span id="updateTime">Loading...</span>
+                            </div>
+                            <button class="btn btn-sm btn-primary refresh-btn" onclick="refreshData()">
+                                <i class="fas fa-sync"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Alert Banner
+        <div id="alertBanner" class="alert-banner" style="display: none;">
+            <div class="container-fluid">
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+                        <div>
+                            <strong>CRITICAL ALERT:</strong>
+                            <span id="bannerMessage">Water contamination detected in multiple villages!</span>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                </div>
+            </div>
+        </div> -->
+
+        <!-- Main Content -->
+        <main class="container-fluid py-4">
+            <!-- Analytics Cards -->
+            <div class="row g-3 mb-4">
+                <div class="col-xl-2 col-lg-4 col-md-4 col-6">
+                    <div class="card stat-card glass">
+                        <div class="card-body">
+                            <div class="stat-header">
+                                <span class="stat-icon"><i class="fas fa-city"></i></span>
+                                <span class="stat-badge">Total</span>
+                            </div>
+                            <h2 class="stat-number" id="totalVillages">0</h2>
+                            <p class="stat-label">Villages Monitored</p>
+                            <div class="stat-footer">
+                                <i class="fas fa-check-circle text-success"></i> Active
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-2 col-lg-4 col-md-4 col-6">
+                    <div class="card stat-card glass safe">
+                        <div class="card-body">
+                            <div class="stat-header">
+                                <span class="stat-icon"><i class="fas fa-check-circle"></i></span>
+                                <span class="stat-badge">Safe</span>
+                            </div>
+                            <h2 class="stat-number text-success" id="safeVillages">0</h2>
+                            <p class="stat-label">Clean Water</p>
+                            <div class="stat-footer">
+                                <i class="fas fa-arrow-up text-success"></i> Stable
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-2 col-lg-4 col-md-4 col-6">
+                    <div class="card stat-card glass warning">
+                        <div class="card-body">
+                            <div class="stat-header">
+                                <span class="stat-icon"><i class="fas fa-exclamation-triangle"></i></span>
+                                <span class="stat-badge">Warning</span>
+                            </div>
+                            <h2 class="stat-number text-warning" id="warningVillages">0</h2>
+                            <p class="stat-label">Needs Attention</p>
+                            <div class="stat-footer">
+                                <i class="fas fa-arrow-up text-warning"></i> Alert
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-2 col-lg-4 col-md-4 col-6">
+                    <div class="card stat-card glass dangerous">
+                        <div class="card-body">
+                            <div class="stat-header">
+                                <span class="stat-icon"><i class="fas fa-times-circle"></i></span>
+                                <span class="stat-badge">Critical</span>
+                            </div>
+                            <h2 class="stat-number text-danger" id="dangerousVillages">0</h2>
+                            <p class="stat-label">Contamination Risk</p>
+                            <div class="stat-footer">
+                                <i class="fas fa-arrow-up text-danger"></i> Critical
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-2 col-lg-6 col-md-6 col-6">
+                    <div class="card stat-card glass alert-card">
+                        <div class="card-body">
+                            <div class="stat-header">
+                                <span class="stat-icon"><i class="fas fa-bell"></i></span>
+                                <span class="stat-badge">Alerts</span>
+                            </div>
+                            <h2 class="stat-number text-warning" id="activeAlerts">0</h2>
+                            <p class="stat-label">Active Alerts</p>
+                            <div class="stat-footer">
+                                <i class="fas fa-clock"></i> Last 6 Hours
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-2 col-lg-6 col-md-6 col-6">
+                    <div class="card stat-card glass risk-card">
+                        <div class="card-body">
+                            <div class="stat-header">
+                                <span class="stat-icon"><i class="fas fa-chart-line"></i></span>
+                                <span class="stat-badge">Risk Index</span>
+                            </div>
+                            <h2 class="stat-number" id="riskIndex">0%</h2>
+                            <p class="stat-label">Overall Health</p>
+                            <div class="stat-footer" id="riskTrend">
+                                <i class="fas fa-minus"></i> Stable
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Map and Alerts -->
+            <div class="row g-3 mb-4">
+                <div class="col-lg-7">
+                    <div class="card glass map-card">
+                        <div class="card-header glass-header">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-map-marked-alt text-primary"></i>
+                                    Dharmapuri Village Map
+                                </h5>
+                                <div class="map-controls">
+                                    <button class="btn btn-sm btn-outline-primary me-2" onclick="resetMapView()">
+                                        <i class="fas fa-home"></i> Reset View
+                                    </button>
+                                    <div class="map-legend">
+                                        <span><span class="legend-dot safe"></span> Safe</span>
+                                        <span><span class="legend-dot warning"></span> Warning</span>
+                                        <span><span class="legend-dot dangerous"></span> Critical</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            <div id="map"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <div class="card glass alerts-card">
+                        <div class="card-header glass-header">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-bell text-warning"></i>
+                                    Live Alerts Feed
+                                </h5>
+                                <!-- <div>
+                                    <span class="badge bg-danger me-2" id="alertCount">0</span>
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="clearAlerts()">
+                                        <i class="fas fa-check-double"></i>
+                                    </button>
+                                </div> -->
+                            </div>
+                        </div>
+                        <div class="card-body alerts-container" id="alertsContainer">
+                            <div class="empty-state">
+                                <i class="fas fa-check-circle fa-3x mb-3"></i>
+                                <p>No active alerts</p>
+                                <small>System is running normally</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row 1 -->
+            <div class="row g-3 mb-4">
+                <div class="col-lg-6">
+                    <div class="card glass chart-card">
+                        <div class="card-header glass-header">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-chart-line text-primary"></i>
+                                    Water Quality Trends
+                                </h5>
+                                <div class="chart-controls">
+                                    <button class="btn btn-sm btn-outline-primary" onclick="toggleChartView('line')">
+                                        <i class="fas fa-chart-line"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="toggleChartView('bar')">
+                                        <i class="fas fa-chart-bar"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="qualityChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3">
+                    <div class="card glass chart-card">
+                        <div class="card-header glass-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-chart-pie text-primary"></i>
+                                Risk Distribution
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="riskChart"></canvas>
+                            </div>
+                            <div class="chart-stats" id="riskStats">
+                                <span><span class="dot safe"></span> <span id="safePercent">0%</span></span>
+                                <span><span class="dot warning"></span> <span id="warningPercent">0%</span></span>
+                                <span><span class="dot dangerous"></span> <span id="dangerousPercent">0%</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3">
+                    <div class="card glass chart-card">
+                        <div class="card-header glass-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-gauge-high text-primary"></i>
+                                Parameter Health
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="parameterHealthChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row 2 -->
+            <div class="row g-3 mb-4">
+                <div class="col-lg-4">
+                    <div class="card glass chart-card">
+                        <div class="card-header glass-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-water text-primary"></i>
+                                pH Distribution
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="phDistributionChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card glass chart-card">
+                        <div class="card-header glass-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-flask text-primary"></i>
+                                TDS Distribution
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="tdsDistributionChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card glass chart-card">
+                        <div class="card-header glass-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-temperature-high text-primary"></i>
+                                Temperature Distribution
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="tempDistributionChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Section -->
+            <div class="row g-3 mb-4">
+                <div class="col-12">
+                    <div class="card glass filter-card">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-3">
+                                    <label class="filter-label">
+                                        <i class="fas fa-filter"></i> Filter by Status
+                                    </label>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="filter-buttons">
+                                        <button class="filter-btn active" data-filter="all" onclick="filterTable('all')">
+                                            <i class="fas fa-list"></i> All
+                                        </button>
+                                        <button class="filter-btn" data-filter="Safe" onclick="filterTable('Safe')">
+                                            <i class="fas fa-check-circle text-success"></i> Safe
+                                        </button>
+                                        <button class="filter-btn" data-filter="Warning" onclick="filterTable('Warning')">
+                                            <i class="fas fa-exclamation-triangle text-warning"></i> Warning
+                                        </button>
+                                        <button class="filter-btn" data-filter="Dangerous" onclick="filterTable('Dangerous')">
+                                            <i class="fas fa-times-circle text-danger"></i> Critical
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 text-end">
+                                    <div class="search-box">
+                                        <i class="fas fa-search"></i>
+                                        <input type="text" class="search-input" placeholder="Search village..." onkeyup="searchTable(this.value)">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Village Status Table -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card glass table-card">
+                        <div class="card-header glass-header">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-table text-primary"></i>
+                                    Village Status Dashboard
+                                    <span class="badge bg-secondary ms-2" id="tableCount">0 Villages</span>
+                                </h5>
+                                <div class="table-controls">
+                                    <button class="btn btn-sm btn-outline-primary" onclick="exportData()">
+                                        <i class="fas fa-download"></i> Export CSV
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="printTable()">
+                                        <i class="fas fa-print"></i> Print
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body table-responsive">
+                            <table class="table table-dark table-hover" id="villageTable">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Village</th>
+                                        <th>pH</th>
+                                        <th>TDS (ppm)</th>
+                                        <th>Turbidity (NTU)</th>
+                                        <th>Temperature (°C)</th>
+                                        <th>Risk Score</th>
+                                        <th>Status</th>
+                                        <th>Last Updated</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="villageTableBody">
+                                    <tr>
+                                        <td colspan="9" class="text-center text-muted">
+                                            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                                            Loading data...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer glass">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p class="mb-0">
+                            <i class="fas fa-copyright"></i> 2026 Neer Kavalan - Government of Tamil Nadu
+                        </p>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <p class="mb-0">
+                            <!-- <i class="fas fa-database"></i> Data updated every 5 seconds -->
+                            <span class="ms-3">
+                                <i class="fas fa-shield-alt text-success"></i> Secure
+                            </span>
+                            <span class="ms-3">
+                                <i class="fas fa-robot"></i> AI Powered
+                            </span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Custom JavaScript -->
+    <script src="app.js"></script>
+</body>
+</html>
