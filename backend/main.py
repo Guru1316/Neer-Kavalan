@@ -470,3 +470,11 @@ async def simulate_reading(village_name: str):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
+import threading
+from simulation import run_simulation
+
+threading.Thread(
+    target=run_simulation,
+    daemon=True
+).start()
